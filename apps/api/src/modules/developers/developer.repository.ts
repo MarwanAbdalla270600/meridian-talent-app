@@ -273,13 +273,13 @@ export async function listDevelopers(
       or(
         sql`(coalesce(${developers.firstName}, '') || ' ' || coalesce(${developers.lastName}, '') || ' ' || coalesce(${developers.title}, '')) ilike ${like}`,
         sql`exists (select 1 from ${developerSkills} ds join ${skills} s on s.id = ds.skill_id
-                    where ds.developer_id = ${developers.id} and (s.name ilike ${like} or exists (select 1 from unnest(s.aliases) a where a ilike ${like})))`,
+                    where ds.developer_id = "developers"."id" and (s.name ilike ${like} or exists (select 1 from unnest(s.aliases) a where a ilike ${like})))`,
       )!,
     );
   }
   for (const skillId of q.skills) {
     where.push(
-      sql`exists (select 1 from ${developerSkills} ds where ds.developer_id = ${developers.id} and ds.skill_id = ${skillId})`,
+      sql`exists (select 1 from ${developerSkills} ds where ds.developer_id = "developers"."id" and ds.skill_id = ${skillId})`,
     );
   }
   const cond = and(...where);
@@ -296,7 +296,7 @@ export async function listDevelopers(
           : [dir(developers.updatedAt)];
 
   const skillNames = sql<string[]>`coalesce((select array_agg(s.name order by ds.level desc, s.name)
-      from ${developerSkills} ds join ${skills} s on s.id = ds.skill_id where ds.developer_id = ${developers.id}), '{}')`;
+      from ${developerSkills} ds join ${skills} s on s.id = ds.skill_id where ds.developer_id = "developers"."id"), '{}')`;
 
   const [rows, [total]] = await Promise.all([
     tx

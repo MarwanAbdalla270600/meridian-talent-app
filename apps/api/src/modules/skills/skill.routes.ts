@@ -21,7 +21,7 @@ import { writeAudit } from '../audit/audit.service';
 import { findInCatalog, mergeSkill } from './skill.service';
 
 const tags = ['skills'];
-const usage = sql<number>`(select count(*)::int from ${developerSkills} ds where ds.skill_id = ${skills.id})`;
+const usage = sql<number>`(select count(*)::int from ${developerSkills} ds where ds.skill_id = "skills"."id")`;
 const body = <T>(schema: T) => ({
   body: { content: { 'application/json': { schema } }, required: true },
 });

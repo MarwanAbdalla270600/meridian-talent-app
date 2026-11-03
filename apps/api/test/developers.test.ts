@@ -78,6 +78,11 @@ describe('create & read', () => {
     const approved = await approvedDev(ctx, { firstName: 'Carla', lastName: 'Gamma' });
 
     expect((await egypt.get('/api/developers?q=beta')).body.total).toBe(1);
+    // correlated subqueries: skill names per developer (regression for unqualified column binding)
+    const gamma = (await egypt.get('/api/developers?q=gamma')).body.items[0];
+    expect(gamma.topSkills).toEqual(['Java', 'Spring Boot', 'Angular', 'AWS']);
+    expect(gamma.skillCount).toBe(4);
+    expect((await egypt.get('/api/developers?q=spring')).body.total).toBe(2);
     expect((await egypt.get('/api/developers?q=php')).body.items[0].lastName).toBe('Beta');
     expect(
       (await egypt.get('/api/developers?pool=p2')).body.items.map((d: { id: string }) => d.id),
