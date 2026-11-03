@@ -11,7 +11,10 @@ import { rateLimit } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
 import { noStore, securityHeaders } from './middleware/security-headers';
 import { authRoutes } from './modules/auth/auth.routes';
+import { developerRoutes } from './modules/developers/developer.routes';
+import { documentRoutes } from './modules/documents/document.routes';
 import { healthRoutes } from './modules/health/health.routes';
+import { skillRoutes } from './modules/skills/skill.routes';
 import type { AppEnv, Deps } from './types';
 
 export function createApp(deps: Deps) {
@@ -47,6 +50,9 @@ export function createApp(deps: Deps) {
 
   app.route('/api/health', healthRoutes(deps));
   app.route('/api/auth', authRoutes(deps));
+  app.route('/api/developers', developerRoutes(deps));
+  app.route('/api/developers', documentRoutes(deps));
+  app.route('/api/skills', skillRoutes(deps));
 
   if (deps.env.API_DOCS_ENABLED) {
     app.doc31('/api/openapi.json', {

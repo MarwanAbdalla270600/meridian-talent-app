@@ -164,7 +164,7 @@ export class TestClient {
       const csrf = this.cookies.get('mt_csrf');
       if (opts.csrf !== false && csrf) headers['x-csrf-token'] = csrf;
     }
-    let payload: BodyInit | undefined;
+    let payload: string | FormData | undefined;
     if (opts.form) payload = opts.form;
     else if (body !== undefined) {
       headers['content-type'] = 'application/json';

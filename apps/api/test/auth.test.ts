@@ -63,7 +63,7 @@ describe('login', () => {
     const cookie = res.headers.getSetCookie().find((s) => s.startsWith('mt_session='))!;
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=Lax');
-    const me = await res.json();
+    const me = (await res.json()) as any;
     expect(me.role).toBe('egypt_editor');
     expect(me.permissions).toContain('developer:create');
     expect(me.permissions).not.toContain('client:read');
