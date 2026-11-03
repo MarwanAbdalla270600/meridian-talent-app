@@ -15,6 +15,7 @@ import { clientRoutes } from './modules/clients/client.routes';
 import { developerRoutes } from './modules/developers/developer.routes';
 import { documentRoutes } from './modules/documents/document.routes';
 import { healthRoutes } from './modules/health/health.routes';
+import { developerPdfRoutes, requestPdfRoutes } from './modules/pdf/pdf.routes';
 import { requestRoutes } from './modules/requests/request.routes';
 import { skillRoutes } from './modules/skills/skill.routes';
 import type { AppEnv, Deps } from './types';
@@ -57,6 +58,8 @@ export function createApp(deps: Deps) {
   app.route('/api/skills', skillRoutes(deps));
   app.route('/api/clients', clientRoutes(deps));
   app.route('/api/requests', requestRoutes(deps));
+  app.route('/api/developers', developerPdfRoutes(deps));
+  app.route('/api/requests', requestPdfRoutes(deps));
 
   if (deps.env.API_DOCS_ENABLED) {
     app.doc31('/api/openapi.json', {

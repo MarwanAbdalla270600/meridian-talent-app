@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@types/nodemailer": "8.0.2",
-    "drizzle-kit": "0.31.11"
+    "drizzle-kit": "0.31.11",
+    "unpdf": "2.1.0"
   }
 }
