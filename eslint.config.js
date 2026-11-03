@@ -30,7 +30,8 @@ export default tseslint.config(
       ],
       '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
       'no-console': ['error', { allow: ['error', 'warn', 'log'] }],
-      eqeqeq: ['error', 'always'],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
+      '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
       // `noUncheckedIndexedAccess` is on; `!` is used deliberately after single-row
       // `insert().returning()` and for context values guaranteed by middleware.
       '@typescript-eslint/no-non-null-assertion': 'off',

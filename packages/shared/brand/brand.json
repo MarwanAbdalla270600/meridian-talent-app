@@ -1,0 +1,10 @@
+{
+  "$comment": "Brand configuration. Replace logo.svg and adjust values to rebrand web app and PDF profiles.",
+  "name": "Meridian Talent",
+  "city": { "de": "Wien", "en": "Vienna" },
+  "primaryColor": "#2F6BFF",
+  "primaryDarkColor": "#1E4FD0",
+  "navColor": "#0A0F1A",
+  "logo": "logo.svg",
+  "font": "fonts/InterVariable.woff2"
+}

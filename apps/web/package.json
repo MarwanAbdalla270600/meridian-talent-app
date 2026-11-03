@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
-    "build": "ng build",
+    "start": "node scripts/sync-brand.mjs && ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
+    "build": "node scripts/sync-brand.mjs && ng build",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "ng test --watch=false",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "brand": "node scripts/sync-brand.mjs"
   },
   "private": true,
   "dependencies": {
