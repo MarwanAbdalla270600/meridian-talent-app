@@ -1,0 +1,159 @@
+# Production stack: `docker compose -f deploy/docker-compose.prod.yml up -d`
+# Configuration: deploy/.env (copy from ../.env.example; never commit it).
+# Only Caddy is reachable from outside; Postgres sits on an internal network.
+name: meridian
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: 10m, max-file: '5' }
+
+x-hardening: &hardening
+  restart: unless-stopped
+  logging: *logging
+  security_opt: ['no-new-privileges:true']
+  cap_drop: [ALL]
+
+x-api: &api-base
+  image: ${IMAGE_REGISTRY:-ghcr.io/your-org}/meridian-talent-api:${IMAGE_TAG:-latest}
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    BASE_URL: https://${DOMAIN:?DOMAIN is required}
+    TRUST_PROXY: 'true'
+    DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+    APP_VERSION: ${IMAGE_TAG:-latest}
+
+services:
+  caddy:
+    <<: *hardening
+    image: caddy:2.11.7-alpine
+    cap_add: [NET_BIND_SERVICE]
+    ports: ['80:80', '443:443', '443:443/udp']
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required}
+      ACME_EMAIL: ${ACME_EMAIL}
+      S3_DOMAIN: ${S3_DOMAIN:-files.localhost}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro,z
+      - ./caddy/sites:/etc/caddy/sites:ro,z
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+    depends_on:
+      web: { condition: service_healthy }
+      api: { condition: service_healthy }
+    deploy:
+      resources: { limits: { cpus: '1', memory: 256M } }
+
+  web:
+    <<: *hardening
+    image: ${IMAGE_REGISTRY:-ghcr.io/your-org}/meridian-talent-web:${IMAGE_TAG:-latest}
+    read_only: true
+    tmpfs: [/tmp]
+    networks: [edge]
+    deploy:
+      resources: { limits: { cpus: '0.5', memory: 128M } }
+
+  migrate:
+    <<: [*hardening, *api-base]
+    restart: 'no'
+    command: ['bun', 'src/db/migrate.ts']
+    networks: [backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: [*hardening, *api-base]
+    read_only: true
+    tmpfs: ['/tmp:size=256m']
+    shm_size: 512m
+    networks: [edge, backend]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      postgres: { condition: service_healthy }
+    deploy:
+      resources: { limits: { cpus: '2', memory: 1536M } }
+
+  # One-shot initial users (run once: `docker compose ... run --rm seed`).
+  seed:
+    <<: [*hardening, *api-base]
+    restart: 'no'
+    profiles: [seed]
+    command: ['bun', 'src/db/seed.ts']
+    networks: [backend]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  postgres:
+    <<: *hardening
+    image: postgres:18.6-trixie
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes: [pgdata:/var/lib/postgresql]
+    shm_size: 256m
+    networks: [backend]
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:?POSTGRES_USER is required} -d ${POSTGRES_DB:?POSTGRES_DB is required}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources: { limits: { cpus: '2', memory: 2G } }
+
+  backup:
+    <<: *hardening
+    build: ./backup
+    image: meridian-talent-backup:local
+    cap_add: [CHOWN, SETGID, SETUID]
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATABASE: ${POSTGRES_DB:?POSTGRES_DB is required}
+      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_HOUR_UTC: ${BACKUP_HOUR_UTC:-1}
+    # Named volume by default; set BACKUP_DIR to an absolute host path (owned by uid 999) for a bind mount.
+    volumes: ['${BACKUP_DIR:-backups}:/backups']
+    networks: [backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+    deploy:
+      resources: { limits: { cpus: '1', memory: 512M } }
+
+  # Optional bundled S3 storage (`--profile minio`); otherwise configure an external EU S3 service.
+  minio:
+    <<: *hardening
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    profiles: [minio]
+    cap_add: [CHOWN, SETGID, SETUID]
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+    volumes: [miniodata:/data]
+    networks: [edge, backend]
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+networks:
+  edge: {}
+  backend:
+    internal: true
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+  miniodata:
+  backups:

@@ -11,6 +11,7 @@ FROM oven/bun:${BUN_VERSION}-debian AS bun
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-trixie-slim AS base
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
 WORKDIR /app
 # Pre-create dependency dirs owned by uid 1000 so dev named volumes inherit the owner.
 RUN mkdir -p node_modules apps/api/node_modules apps/web/node_modules packages/shared/node_modules \
@@ -32,7 +33,7 @@ COPY packages/shared/package.json packages/shared/
 RUN bun install --frozen-lockfile --filter '@meridian/web' --ignore-scripts
 COPY packages/shared packages/shared
 COPY apps/web apps/web
-RUN cd apps/web && bunx ng build --configuration production \
+RUN cd apps/web && node scripts/sync-brand.mjs && bunx ng build --configuration production \
  && find dist/web/browser -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' -o -name '*.json' -o -name '*.svg' \) \
       -exec gzip -9 -k {} \;
 

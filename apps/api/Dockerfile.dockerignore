@@ -9,4 +9,5 @@
 .env.*
 deploy
 docs
-apps/web
+apps/web/**
+!apps/web/package.json

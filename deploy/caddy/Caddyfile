@@ -1,0 +1,38 @@
+# Reverse proxy with automatic HTTPS (Let's Encrypt; for DOMAIN=localhost a local CA is used).
+# No access log is written here on purpose: request URIs may contain search terms with
+# personal data. The API writes structured logs without query strings.
+{
+	email {$ACME_EMAIL}
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+(security) {
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		-Server
+		-X-Powered-By
+	}
+}
+
+{$DOMAIN} {
+	import security
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:3000 {
+			# Caddy sets X-Forwarded-For to the client address; the API trusts it (TRUST_PROXY=true).
+			transport http {
+				read_timeout 150s
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy web:8080
+	}
+}
+
+# Optional extra sites, e.g. the bundled MinIO (see sites/minio.caddy.example).
+import /etc/caddy/sites/*.caddy

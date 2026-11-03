@@ -37,8 +37,10 @@
         "zod": "4.6.7",
       },
       "devDependencies": {
+        "@types/bun": "1.4.4",
         "@types/nodemailer": "8.0.2",
         "drizzle-kit": "0.31.11",
+        "typescript": "6.0.3",
         "unpdf": "2.1.0",
       },
     },
@@ -77,6 +79,10 @@
       "version": "1.0.0",
       "dependencies": {
         "zod": "4.6.7",
+      },
+      "devDependencies": {
+        "@types/bun": "1.4.4",
+        "typescript": "6.0.3",
       },
     },
   },

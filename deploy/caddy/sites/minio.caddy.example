@@ -1,0 +1,8 @@
+# Copy to minio.caddy when the bundled MinIO (compose profile "minio") is used.
+# Pre-signed download URLs are generated for S3_PUBLIC_ENDPOINT=https://{$S3_DOMAIN}.
+{$S3_DOMAIN} {
+	import security
+	reverse_proxy minio:9000 {
+		header_up Host {upstream_hostport}
+	}
+}
