@@ -37,7 +37,9 @@ import { DialogService } from '../../shared/ui/dialogs';
             (change)="setCategory(s, $any($event.target).value)"
           >
             @for (c of categories; track c) {
-              <option [value]="c">{{ 'category.' + c | transloco }}</option>
+              <option [value]="c" [selected]="c === s.category">
+                {{ 'category.' + c | transloco }}
+              </option>
             }
           </select>
           <button type="button" class="btn btn-sm btn-primary" (click)="approve(s)">

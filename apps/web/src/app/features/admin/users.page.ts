@@ -99,7 +99,9 @@ import { IconComponent } from '../../shared/ui/icon.component';
                   (change)="update(u, { role: $any($event.target).value })"
                 >
                   @for (r of roles; track r) {
-                    <option [value]="r">{{ 'roles.' + r | transloco }}</option>
+                    <option [value]="r" [selected]="r === u.role">
+                      {{ 'roles.' + r | transloco }}
+                    </option>
                   }
                 </select>
               </td>

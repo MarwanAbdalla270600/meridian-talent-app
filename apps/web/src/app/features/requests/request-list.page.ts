@@ -101,7 +101,9 @@ import { RequestFormDialog, type RequestFormData } from './request-form.dialog';
                 (change)="setStatus($any($event.target).value)"
               >
                 @for (s of statuses; track s) {
-                  <option [value]="s">{{ 'requestStatus.' + s | transloco }}</option>
+                  <option [value]="s" [selected]="s === r.status">
+                    {{ 'requestStatus.' + s | transloco }}
+                  </option>
                 }
               </select>
               <button type="button" class="btn btn-sm" (click)="edit(r)">
@@ -153,7 +155,9 @@ import { RequestFormDialog, type RequestFormData } from './request-form.dialog';
                     (change)="setProposalStatus(p.developerId, $any($event.target).value)"
                   >
                     @for (s of proposalStatuses; track s) {
-                      <option [value]="s">{{ 'proposalStatus.' + s | transloco }}</option>
+                      <option [value]="s" [selected]="s === p.status">
+                        {{ 'proposalStatus.' + s | transloco }}
+                      </option>
                     }
                   </select>
                 </li>

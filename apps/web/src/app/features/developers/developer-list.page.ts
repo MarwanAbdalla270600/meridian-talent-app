@@ -96,7 +96,9 @@ const PAGE_SIZE = 24;
           >
             <option value="">{{ 'developer.allLevels' | transloco }}</option>
             @for (s of seniorities; track s) {
-              <option [value]="s">{{ 'seniority.' + s | transloco }}</option>
+              <option [value]="s" [selected]="s === seniority()">
+                {{ 'seniority.' + s | transloco }}
+              </option>
             }
           </select>
         </div>
@@ -109,8 +111,12 @@ const PAGE_SIZE = 24;
             (change)="set({ availability: $any($event.target).value || null })"
           >
             <option value="">{{ 'developer.allAvailability' | transloco }}</option>
-            <option value="now">{{ 'developer.availNow' | transloco }}</option>
-            <option value="30">{{ 'developer.avail30' | transloco }}</option>
+            <option value="now" [selected]="availability() === 'now'">
+              {{ 'developer.availNow' | transloco }}
+            </option>
+            <option value="30" [selected]="availability() === '30'">
+              {{ 'developer.avail30' | transloco }}
+            </option>
           </select>
         </div>
         <div>
@@ -122,7 +128,9 @@ const PAGE_SIZE = 24;
             (change)="set({ sort: $any($event.target).value })"
           >
             @for (s of sorts; track s) {
-              <option [value]="s">{{ 'developer.sort.' + s | transloco }}</option>
+              <option [value]="s" [selected]="s === (sort() ?? 'updated')">
+                {{ 'developer.sort.' + s | transloco }}
+              </option>
             }
           </select>
         </div>
