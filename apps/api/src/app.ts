@@ -10,15 +10,18 @@ import { errorHandler, notFoundHandler, validationHook } from './middleware/erro
 import { rateLimit } from './middleware/rate-limit';
 import { requestContext } from './middleware/request-context';
 import { noStore, securityHeaders } from './middleware/security-headers';
+import { auditAndSettingsRoutes } from './modules/audit/audit.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { clientRoutes } from './modules/clients/client.routes';
 import { developerRoutes } from './modules/developers/developer.routes';
 import { documentRoutes } from './modules/documents/document.routes';
+import { gdprRoutes } from './modules/gdpr/gdpr.routes';
 import { healthRoutes } from './modules/health/health.routes';
 import { importRoutes } from './modules/imports/import.routes';
 import { developerPdfRoutes, requestPdfRoutes } from './modules/pdf/pdf.routes';
 import { requestRoutes } from './modules/requests/request.routes';
 import { skillRoutes } from './modules/skills/skill.routes';
+import { userRoutes } from './modules/users/user.routes';
 import type { AppEnv, Deps } from './types';
 
 export function createApp(deps: Deps) {
@@ -62,6 +65,9 @@ export function createApp(deps: Deps) {
   app.route('/api/developers', developerPdfRoutes(deps));
   app.route('/api/requests', requestPdfRoutes(deps));
   app.route('/api/imports', importRoutes(deps));
+  app.route('/api/admin/users', userRoutes(deps));
+  app.route('/api/admin', auditAndSettingsRoutes(deps));
+  app.route('/api/admin/gdpr', gdprRoutes(deps));
 
   if (deps.env.API_DOCS_ENABLED) {
     app.doc31('/api/openapi.json', {
