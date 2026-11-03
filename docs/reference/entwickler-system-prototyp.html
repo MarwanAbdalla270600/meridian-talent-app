@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Talent – Talent-System (Prototyp)</title>
+<style>
+:root{
+  --bg:#F4F6FA; --card:#fff; --ink:#0F1729; --muted:#5B677D; --line:#E2E7F0; --line2:#CDD5E3;
+  --blue:#2F6BFF; --blue-d:#1E4FD0; --blue-l:#E8F0FF; --green:#12A36B; --green-l:#E3F6EE; --amber:#C27A00; --amber-l:#FFF3DC; --red:#D2483B;
+  --nav:#0A0F1A;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+/* sidebar */
+.side{background:var(--nav);color:#C5CEDF;padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:16px;padding:4px 8px 18px}
+.brand i{width:28px;height:28px;border-radius:7px;background:var(--blue);display:grid;place-items:center}
+.brand svg{width:18px;height:18px}
+.nv{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:0;background:none;color:inherit;text-align:left;width:100%;font-weight:500}
+.nv:hover{background:rgba(255,255,255,.07);color:#fff}
+.nv.on{background:rgba(47,107,255,.22);color:#fff}
+.nv svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nv .ct{margin-left:auto;font-size:12px;background:rgba(255,255,255,.12);padding:1px 8px;border-radius:99px}
+.side .sp{flex:1}
+.lang{display:flex;background:rgba(255,255,255,.08);border-radius:9px;padding:3px;margin:6px 4px}
+.lang button{flex:1;border:0;background:none;color:#C5CEDF;padding:6px;border-radius:7px;font-weight:600;font-size:13px}
+.lang button.on{background:#fff;color:var(--nav)}
+.demo{font-size:12px;color:#8E9BB3;padding:8px 10px;border-top:1px solid rgba(255,255,255,.1);margin-top:6px}
+/* main */
+main{padding:28px clamp(16px,3vw,40px) 60px;max-width:1400px;width:100%}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:26px;letter-spacing:-.02em;font-weight:700}
+.sub{color:var(--muted);margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--card);padding:9px 16px;border-radius:10px;font-weight:600;font-size:14px;transition:.15s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn.p{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.p:hover{background:var(--blue-d);color:#fff}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
+.btn.d:hover{border-color:var(--red);color:var(--red)}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.stat b{font-size:28px;letter-spacing:-.02em;display:block}
+.stat span{color:var(--muted);font-size:13px}
+input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{border:1px solid var(--line2);background:#fff;border-radius:9px;padding:8px 11px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.15)}
+textarea{min-height:84px;resize:vertical}
+label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+/* filters */
+.filters{display:grid;grid-template-columns:2fr 1.4fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line2);background:#fff;border-radius:99px;padding:4px 11px;font-size:12.5px;font-weight:500}
+button.chip:hover{border-color:var(--blue)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.tag{display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600}
+.tag.g{background:var(--green-l);color:var(--green)}
+.tag.a{background:var(--amber-l);color:var(--amber)}
+.tag.x{background:#EEF1F6;color:var(--muted)}
+/* dev cards */
+.devs{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;margin-top:16px}
+.dc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:12px}
+.dc:hover{border-color:var(--blue);box-shadow:0 8px 24px -12px rgba(47,107,255,.35);transform:translateY(-2px)}
+.av{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:16px;flex:none}
+.dc h3{font-size:16px;letter-spacing:-.01em}
+.dc small{color:var(--muted)}
+.mini{display:flex;flex-wrap:wrap;gap:5px}
+/* detail */
+.back{border:0;background:none;color:var(--muted);font-weight:600;display:inline-flex;gap:6px;align-items:center;margin-bottom:12px;padding:0}
+.back:hover{color:var(--blue)}
+.dgrid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+.hd{display:flex;gap:16px;align-items:center;margin-bottom:6px}
+.hd .av{width:64px;height:64px;font-size:22px;border-radius:16px}
+.sec{margin-top:22px}
+.sec h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px}
+.exp{padding:12px 0;border-top:1px solid var(--line)}
+.exp:first-of-type{border-top:0;padding-top:0}
+.exp b{display:block}
+.exp .m{color:var(--muted);font-size:13px}
+.sk{display:grid;grid-template-columns:1fr 110px 54px;gap:10px;align-items:center;padding:6px 0}
+.dots{display:flex;gap:4px}
+.dots i{width:16px;height:6px;border-radius:3px;background:#E2E7F0}
+.dots i.f{background:var(--blue)}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:14px}
+.kv dt{color:var(--muted)}
+.edit-sk{display:grid;grid-template-columns:1fr 100px 80px 34px;gap:8px;margin-bottom:8px}
+.edit-ex{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;gap:8px}
+/* tables */
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:#F8FAFD}
+.bar{height:8px;border-radius:8px;background:#E8ECF3;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--blue),#6FA0FF)}
+.bar.g i{background:var(--green)}
+.match{display:grid;grid-template-columns:44px 1fr 180px auto;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.match:first-child{border-top:0}
+.pct{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.miss{color:var(--red);font-size:12.5px;font-weight:600}
+/* import */
+.drop{border:2px dashed var(--line2);border-radius:16px;padding:44px 20px;text-align:center;background:#fff;transition:.15s}
+.drop.over,.drop:hover{border-color:var(--blue);background:var(--blue-l)}
+.drop svg{width:38px;height:38px;stroke:var(--blue);fill:none;stroke-width:1.5;margin-bottom:8px}
+.note{background:var(--amber-l);color:#7A4B00;border-radius:10px;padding:10px 14px;font-size:13px}
+.prog{height:8px;background:#E8ECF3;border-radius:8px;overflow:hidden;margin:14px auto;max-width:340px}
+.prog i{display:block;height:100%;width:0;background:var(--blue);animation:pg 1.8s ease forwards}
+@keyframes pg{to{width:100%}}
+/* modal / sheet */
+.ov{position:fixed;inset:0;background:rgba(10,15,26,.6);z-index:50;display:none;overflow:auto;padding:24px}
+.ov.on{display:block}
+.tb{max-width:880px;margin:0 auto 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;border-radius:12px;padding:12px 14px}
+.tb .seg{display:flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+.tb .seg button{border:0;background:#fff;padding:7px 13px;font-weight:600;font-size:13px}
+.tb .seg button.on{background:var(--blue);color:#fff}
+.tb label{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:500}
+.tb .sp{flex:1}
+.sheet{background:#fff;max-width:880px;margin:0 auto;padding:46px 52px;min-height:1100px;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#111827;font-size:13px;line-height:1.5}
+.sheet.short{min-height:0}
+.sh-top{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--blue);padding-bottom:14px;margin-bottom:22px}
+.sh-brand{display:flex;gap:9px;align-items:center;font-weight:700;font-size:15px}
+.sh-brand i{width:24px;height:24px;border-radius:6px;background:var(--blue);display:grid;place-items:center}
+.sh-brand svg{width:15px;height:15px}
+.sh-top small{color:#6B7488}
+.sh-id{display:flex;gap:18px;align-items:center;margin-bottom:18px}
+.sh-id .av{width:68px;height:68px;font-size:24px}
+.sh-id h2{font-size:24px;letter-spacing:-.02em;line-height:1.15}
+.sh-id p{color:#4A5468;font-size:14px}
+.sh-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.sh-facts div{background:#F3F6FC;border-radius:8px;padding:9px 12px}
+.sh-facts small{display:block;color:#6B7488;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.sh-facts b{font-size:14px}
+.sheet h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-d);margin:20px 0 8px;border-bottom:1px solid #E2E7F0;padding-bottom:4px}
+.sh-sk{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 28px}
+.sh-sk>div{display:grid;grid-template-columns:1fr 84px 38px;gap:8px;align-items:center}
+.sh-ex{margin-bottom:11px;break-inside:avoid}
+.sh-ex b{font-size:13.5px}
+.sh-ex span{color:#6B7488}
+.sh-foot{margin-top:28px;padding-top:12px;border-top:1px solid #E2E7F0;font-size:11px;color:#6B7488;display:flex;justify-content:space-between}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;z-index:99;font-weight:500;display:none}
+.toast.on{display:block}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:1px solid var(--line2);background:#fff;border-radius:12px;padding:10px 16px;font-weight:600;display:flex;gap:10px;align-items:center}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab .n{background:rgba(127,140,165,.2);border-radius:99px;padding:0 9px;font-size:12.5px}
+.tab.on .n{background:rgba(255,255,255,.2)}
+.phase{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.phase div{padding:11px 14px;border-radius:10px;background:#E8ECF3;color:var(--muted);font-weight:600;font-size:13px;display:flex;gap:8px;align-items:center}
+.phase div.done{background:var(--green-l);color:var(--green)}
+.phase div.cur{background:var(--blue);color:#fff}
+.chk{display:grid;gap:6px}
+.chk div{display:flex;gap:9px;align-items:center;font-size:13.5px}
+.chk i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-style:normal;flex:none;background:#E8ECF3;color:var(--muted)}
+.chk .ok i{background:var(--green);color:#fff}
+.chk .ok{color:var(--ink)}
+.retn{background:#FFF1F0;border:1px solid #F5C6C1;color:#8A2B22;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13.5px}
+.lock{background:var(--amber-l);color:#7A4B00;border-radius:10px;padding:10px 14px;font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:40px}
+@media (max-width:1000px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px}
+  .brand{padding:4px 8px}.side .sp,.demo{display:none}
+  .nv{width:auto;padding:8px 10px}
+  .filters{grid-template-columns:1fr 1fr}
+  .dgrid{grid-template-columns:1fr}
+  .match{grid-template-columns:44px 1fr;}
+  .match>*:nth-child(3),.match>*:nth-child(4){grid-column:2}
+  .sheet{padding:26px 20px}.sh-facts{grid-template-columns:1fr 1fr}.sh-sk{grid-template-columns:1fr}
+}
+@media (max-width:640px){.grid2,.grid3{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.edit-sk{grid-template-columns:1fr 1fr}}
+@media print{
+  body{background:#fff}
+  .app,.toast,.tb{display:none!important}
+  .ov{position:static;display:block;padding:0;background:none;overflow:visible}
+  .sheet{box-shadow:none;max-width:none;padding:0;min-height:0;margin:0}
+  @page{margin:14mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><i><svg viewBox="0 0 32 32"><path d="M6 22L11 10l5 9 5-9 5 12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>Meridian Talent</div>
+    <div id="nav"></div>
+    <div class="sp"></div>
+    <div class="demo" style="border:0;padding:4px 10px 2px" id="roleLbl"></div><div class="lang" id="roleSw"><button data-act="role" data-v="eg"></button><button data-act="role" data-v="at"></button></div>
+    <div class="lang"><button data-act="ui" data-v="de" id="ui-de">DE</button><button data-act="ui" data-v="en" id="ui-en">EN</button></div>
+    <div class="demo" id="demoNote"></div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<div class="ov" id="ov"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ i18n ============ */
+const T = {
+ de:{ app:"Talent-System", devs:"Entwickler", requests:"Anfragen", imp:"Lebenslauf-Import", clients:"Kunden",
+  demo:"Prototyp mit Demodaten. Alle Personen und Firmen sind frei erfunden.",
+  dashT:"Entwickler", dashS:"Alle erfassten Profile in einem einheitlichen Schema.",
+  newDev:"Neuer Entwickler", search:"Suche nach Name, Rolle, Skill …", allSen:"Alle Level", allAv:"Alle Verfügbarkeiten", availNow:"Sofort", avail30:"Innerhalb 30 Tagen",
+  skillFilter:"Nach Skills filtern", total:"Profile", avail:"Sofort verfügbar", reqOpen:"Offene Anfragen", drafts:"Entwürfe",
+  noRes:"Keine Treffer. Filter anpassen.", back:"Zurück", edit:"Bearbeiten", save:"Speichern", cancel:"Abbrechen", del:"Löschen",
+  clientProfile:"Kundenprofil erstellen", summary:"Kurzprofil", skills:"Skills", exp:"Berufserfahrung", edu:"Ausbildung", certs:"Zertifikate", langs:"Sprachen",
+  title:"Rolle", name:"Name", loc:"Standort", availFrom:"Verfügbar ab", rate:"Stundensatz (€)", seniority:"Level", status:"Status",
+  years:"Jahre", level:"Level", addSkill:"Skill hinzufügen", addExp:"Station hinzufügen", skillName:"Skill", role:"Position", company:"Firma", from:"Von", to:"Bis", desc:"Beschreibung",
+  now:"heute", yrs:"J.", facts:"Eckdaten", internal:"Interne Notiz", internalH:"Nur intern – erscheint nie im Kundenprofil",
+  jun:"Junior", mid:"Mid", sen:"Senior", lead:"Lead",
+  stDraft:"Entwurf", stActive:"Aktiv", stPlaced:"Im Einsatz",
+  matching:"Passende Entwickler", assign:"Vorschlagen", assigned:"Vorgeschlagen", unassign:"Entfernen", missing:"Fehlt", client:"Kunde", reqTitle:"Anfrage", reqSkills:"Gefragte Skills", minLvl:"Min.-Level", start:"Start bis", newReq:"Neue Anfrage",
+  rStatus:{open:"Offen",prop:"Vorgeschlagen",int:"Interview",won:"Beauftragt",lost:"Abgesagt"},
+  noReq:"Noch keine Anfrage gewählt.", pickReq:"Anfrage auswählen", score:"Passung",
+  impT:"Lebenslauf importieren", impS:"Lade einen Lebenslauf hoch. Das System füllt das Profil vor, du prüfst und gibst frei.",
+  drop:"Lebenslauf hier ablegen oder klicken", dropS:"PDF oder Word",
+  impNote:"Prototyp: Die Extraktion wird hier nur simuliert und füllt ein Beispielprofil. In der Vollversion liest eine KI den echten Lebenslauf aus und jedes Feld muss von dir bestätigt werden.",
+  analyzing:"Lebenslauf wird analysiert …", imported:"Entwurf angelegt. Bitte prüfen und freigeben.",
+  sheetShort:"Kurzprofil (1 Seite)", sheetLong:"Langprofil (ausführlich)", anon:"Anonymisiert", showRate:"Stundensatz zeigen", print:"Drucken / als PDF speichern", close:"Schließen", lang:"Sprache",
+  prof:"Entwicklerprofil", conf:"Vertraulich · Meridian Talent", ref:"Kennung", pdfHint:"Im Druckdialog „Als PDF speichern“ wählen.",
+  saved:"Gespeichert", deleted:"Gelöscht", added:"Hinzugefügt", confirmDel:"Profil wirklich löschen?",
+  clients2:"Kunden", clientsS:"Firmen und ihre Anfragen.", company:"Firma", contact:"Ansprechperson", openReq:"Anfragen", noteGdpr:"Datenschutz: Einwilligung der Kandidaten erfassen",
+  consent:"Einwilligung liegt vor", noConsent:"Einwilligung fehlt",
+  dashReq:"Anfragen und Matching", dashReqS:"Wähle eine Anfrage und sieh sofort, welche Entwickler am besten passen.",
+  pool1:"Pool 1 · Erfasst in Ägypten", pool2:"Pool 2 · Freigegeben (Österreich)", inEntry:"In Erfassung", subm:"Zur Prüfung eingereicht", approved:"Freigegeben",
+  submit:"Zur Prüfung einreichen", approve:"Freigeben", retBack:"Zurück an Ägypten", demote:"Zurück in Pool 1", retPrompt:"Was soll in Ägypten ergänzt werden?",
+  viewAs:"Ansicht als", roleEg:"Ägypten (Erfassung)", roleAt:"Österreich (Prüfung)", toReview:"Zur Prüfung",
+  phase1:"Phase 1 · Erfassung Ägypten", phase2:"Phase 2 · Prüfung Österreich", phase3:"Kundentauglich",
+  notReady:"Noch nicht kundentauglich. Erst nach Freigabe aus Österreich.", needComplete:"Bitte zuerst alle Pflichtpunkte erfüllen.",
+  checklist:"Checkliste für die Freigabe", cName:"Name und Rolle", cSkills:"Mindestens 3 Skills", cExp:"Mindestens 1 Berufsstation", cSumDe:"Kurzprofil Deutsch", cSumEn:"Kurzprofil Englisch", cLang:"Sprachen erfasst", cCons:"Einwilligung des Kandidaten",
+  history:"Verlauf", aSubmit:"eingereicht", aApprove:"freigegeben", aReturn:"zurückgegeben", aDemote:"zurückgestuft", aCreate:"erfasst", rEg:"Ägypten", rAt:"Österreich",
+  retNote:"Rückfrage aus Österreich", onlyApproved:"Nur freigegebene Profile (Pool 2) werden vorgeschlagen.", inUse:"Im Einsatz", locked:"Eingereicht – wartet auf Prüfung in Österreich.",
+  noRights:"Dieser Bereich ist nur in der Ansicht Österreich sichtbar." },
+ en:{ app:"Talent system", devs:"Developers", requests:"Requests", imp:"CV import", clients:"Clients",
+  demo:"Prototype with demo data. All people and companies are fictional.",
+  dashT:"Developers", dashS:"All profiles in one consistent format.",
+  newDev:"New developer", search:"Search name, role, skill …", allSen:"All levels", allAv:"All availability", availNow:"Immediately", avail30:"Within 30 days",
+  skillFilter:"Filter by skills", total:"Profiles", avail:"Available now", reqOpen:"Open requests", drafts:"Drafts",
+  noRes:"No matches. Adjust the filters.", back:"Back", edit:"Edit", save:"Save", cancel:"Cancel", del:"Delete",
+  clientProfile:"Create client profile", summary:"Summary", skills:"Skills", exp:"Experience", edu:"Education", certs:"Certifications", langs:"Languages",
+  title:"Role", name:"Name", loc:"Location", availFrom:"Available from", rate:"Hourly rate (€)", seniority:"Level", status:"Status",
+  years:"Years", level:"Level", addSkill:"Add skill", addExp:"Add position", skillName:"Skill", role:"Position", company:"Company", from:"From", to:"To", desc:"Description",
+  now:"present", yrs:"yrs", facts:"Key facts", internal:"Internal note", internalH:"Internal only – never shown on client profile",
+  jun:"Junior", mid:"Mid", sen:"Senior", lead:"Lead",
+  stDraft:"Draft", stActive:"Active", stPlaced:"Placed",
+  matching:"Matching developers", assign:"Propose", assigned:"Proposed", unassign:"Remove", missing:"Missing", client:"Client", reqTitle:"Request", reqSkills:"Required skills", minLvl:"Min. level", start:"Start by", newReq:"New request",
+  rStatus:{open:"Open",prop:"Proposed",int:"Interview",won:"Won",lost:"Lost"},
+  noReq:"No request selected.", pickReq:"Select request", score:"Match",
+  impT:"Import CV", impS:"Upload a CV. The system pre-fills the profile; you review and approve.",
+  drop:"Drop CV here or click", dropS:"PDF or Word",
+  impNote:"Prototype: extraction is only simulated here and fills a sample profile. In the full version an AI reads the real CV and you confirm each field.",
+  analyzing:"Analysing CV …", imported:"Draft created. Please review and approve.",
+  sheetShort:"Short profile (1 page)", sheetLong:"Full profile (detailed)", anon:"Anonymised", showRate:"Show hourly rate", print:"Print / save as PDF", close:"Close", lang:"Language",
+  prof:"Developer profile", conf:"Confidential · Meridian Talent", ref:"Ref.", pdfHint:"Choose “Save as PDF” in the print dialog.",
+  saved:"Saved", deleted:"Deleted", added:"Added", confirmDel:"Really delete this profile?",
+  clients2:"Clients", clientsS:"Companies and their requests.", company:"Company", contact:"Contact", openReq:"Requests", noteGdpr:"GDPR: record candidate consent",
+  consent:"Consent on file", noConsent:"Consent missing",
+  dashReq:"Requests and matching", dashReqS:"Pick a request and instantly see which developers fit best.",
+  pool1:"Pool 1 · Captured in Egypt", pool2:"Pool 2 · Approved (Austria)", inEntry:"In progress", subm:"Submitted for review", approved:"Approved",
+  submit:"Submit for review", approve:"Approve", retBack:"Return to Egypt", demote:"Move back to Pool 1", retPrompt:"What should Egypt complete?",
+  viewAs:"View as", roleEg:"Egypt (capture)", roleAt:"Austria (review)", toReview:"For review",
+  phase1:"Phase 1 · Captured in Egypt", phase2:"Phase 2 · Reviewed in Austria", phase3:"Client-ready",
+  notReady:"Not client-ready yet. Only after approval from Austria.", needComplete:"Please complete all required items first.",
+  checklist:"Approval checklist", cName:"Name and role", cSkills:"At least 3 skills", cExp:"At least 1 position", cSumDe:"Summary in German", cSumEn:"Summary in English", cLang:"Languages recorded", cCons:"Candidate consent",
+  history:"History", aSubmit:"submitted", aApprove:"approved", aReturn:"returned", aDemote:"moved back", aCreate:"captured", rEg:"Egypt", rAt:"Austria",
+  retNote:"Question from Austria", onlyApproved:"Only approved profiles (Pool 2) are proposed.", inUse:"Placed", locked:"Submitted – waiting for review in Austria.",
+  noRights:"This area is only visible in the Austria view." }
+};
+let ui = "de";
+const t = k => (T[ui][k] ?? k);
+
+/* ============ Demo data ============ */
+const COLORS=["#2F6BFF","#7A4DFF","#0FA3A3","#E0663A","#C23B7A","#3A8E3A","#B58105","#4A5BD4"];
+let uid = 100;
+const today = new Date("2026-11-03");
+const iso = d => d.toISOString().slice(0,10);
+const plus = n => iso(new Date(today.getTime()+n*864e5));
+
+const devs = [
+ {id:1,name:"Karim Hassan",title:"Senior Fullstack Developer",sen:"sen",loc:"Remote",avail:plus(0),rate:48,status:"p2",consent:true,
+  sum:{de:"Fullstack-Entwickler mit Schwerpunkt Java und Angular. Hat mehrere Kundenportale im Bankenumfeld von der Architektur bis zum Livegang begleitet und Teams von bis zu fünf Personen angeleitet.",en:"Fullstack developer focused on Java and Angular. Has taken several customer portals in banking from architecture to go-live and led teams of up to five people."},
+  skills:[["Java",5,9],["Spring Boot",5,7],["Angular",4,6],["TypeScript",4,6],["PostgreSQL",4,8],["AWS",3,4],["Docker",4,5],["CI/CD",4,5]],
+  exp:[{role:"Senior Fullstack Developer",co:"Fintech-Plattform (Demo)",from:"2021",to:"",text:{de:"Entwicklung eines Kundenportals mit Spring Boot und Angular, Migration auf AWS, Aufbau der CI/CD-Pipeline.",en:"Built a customer portal with Spring Boot and Angular, migrated to AWS, set up the CI/CD pipeline."}},
+       {role:"Java Developer",co:"Versicherungs-IT (Demo)",from:"2017",to:"2021",text:{de:"Weiterentwicklung eines Vertragssystems, Performance-Tuning von Oracle-Abfragen.",en:"Extended a contract system, tuned Oracle queries."}}],
+  edu:{de:"B.Sc. Informatik",en:"B.Sc. Computer Science"},certs:["AWS Certified Developer – Associate"],langs:[["Deutsch","B2"],["Englisch","C1"],["Arabisch","Muttersprache"]],note:"Bevorzugt Projekte ab 6 Monaten."},
+ {id:2,name:"Nour Adel",title:"DevOps / Cloud Engineer",sen:"sen",loc:"Remote",avail:plus(21),rate:52,status:"p2",consent:true,
+  sum:{de:"Cloud- und DevOps-Engineer mit Fokus auf AWS und Kubernetes. Automatisiert Infrastruktur mit Terraform und baut zuverlässige Deployment-Pipelines.",en:"Cloud and DevOps engineer focused on AWS and Kubernetes. Automates infrastructure with Terraform and builds reliable deployment pipelines."},
+  skills:[["AWS",5,7],["Kubernetes",5,5],["Terraform",5,5],["Docker",5,7],["GitLab CI",4,5],["Linux",5,9],["Python",3,5],["Prometheus",4,4]],
+  exp:[{role:"DevOps Engineer",co:"E-Commerce-Anbieter (Demo)",from:"2020",to:"",text:{de:"Betrieb eines Kubernetes-Clusters, Infrastruktur komplett als Code, Kostenoptimierung in AWS.",en:"Ran a Kubernetes cluster, infrastructure fully as code, AWS cost optimisation."}},
+       {role:"Systemadministrator",co:"Hosting-Anbieter (Demo)",from:"2016",to:"2020",text:{de:"Linux-Server, Monitoring, Automatisierung mit Ansible.",en:"Linux servers, monitoring, automation with Ansible."}}],
+  edu:{de:"B.Sc. Informatik",en:"B.Sc. Computer Science"},certs:["CKA – Certified Kubernetes Administrator","AWS Solutions Architect – Associate"],langs:[["Deutsch","B1"],["Englisch","C1"],["Arabisch","Muttersprache"]],note:""},
+ {id:3,name:"Omar Samir",title:"Frontend Developer",sen:"mid",loc:"Remote",avail:plus(0),rate:38,status:"p2",consent:true,
+  sum:{de:"Frontend-Entwickler mit React und TypeScript. Legt Wert auf saubere Komponenten, Barrierefreiheit und automatisierte Tests.",en:"Frontend developer with React and TypeScript. Cares about clean components, accessibility and automated tests."},
+  skills:[["React",5,5],["TypeScript",4,5],["Next.js",4,3],["Vue",3,2],["Cypress",4,3],["CSS",5,6],["Node.js",3,3]],
+  exp:[{role:"Frontend Developer",co:"SaaS-Start-up (Demo)",from:"2022",to:"",text:{de:"Aufbau eines Design-Systems und einer Dashboard-Anwendung in React.",en:"Built a design system and a dashboard application in React."}}],
+  edu:{de:"B.Sc. Wirtschaftsinformatik",en:"B.Sc. Business Informatics"},certs:[],langs:[["Deutsch","B1"],["Englisch","C1"],["Arabisch","Muttersprache"]],note:""},
+ {id:4,name:"Salma Youssef",title:"Backend Developer (PHP / Laravel)",sen:"mid",loc:"Remote",avail:plus(14),rate:40,status:"p2",consent:true,
+  sum:{de:"Backend-Entwicklerin mit Laravel und MySQL. Erfahren mit REST-APIs, Zahlungsanbindungen und der Modernisierung älterer PHP-Anwendungen.",en:"Backend developer with Laravel and MySQL. Experienced with REST APIs, payment integrations and modernising older PHP applications."},
+  skills:[["PHP",5,7],["Laravel",5,5],["MySQL",4,7],["Vue",3,3],["Docker",3,3],["REST APIs",5,6],["Ruby on Rails",2,1]],
+  exp:[{role:"Backend Developer",co:"Agentur (Demo)",from:"2019",to:"",text:{de:"Laravel-Anwendungen für Kunden aus Handel und Logistik, Upgrade von PHP 5 auf PHP 8.",en:"Laravel applications for retail and logistics clients, upgrade from PHP 5 to PHP 8."}}],
+  edu:{de:"B.Sc. Informatik",en:"B.Sc. Computer Science"},certs:["Laravel Certified Developer"],langs:[["Deutsch","B2"],["Englisch","C1"],["Arabisch","Muttersprache"]],note:""},
+ {id:5,name:"Tarek Mostafa",title:"SAP ABAP / Fiori Developer",sen:"sen",loc:"Remote",avail:plus(45),rate:62,status:"p2",placed:true,consent:true,
+  sum:{de:"SAP-Entwickler mit Schwerpunkt ABAP Cloud, RAP und Fiori. Begleitet S/4HANA-Migrationen und passt Custom Code an.",en:"SAP developer focused on ABAP Cloud, RAP and Fiori. Supports S/4HANA migrations and adapts custom code."},
+  skills:[["ABAP",5,10],["RAP",4,3],["SAP Fiori",4,4],["CDS",4,4],["S/4HANA",4,4],["SAPUI5",4,4],["SAP BTP",3,2]],
+  exp:[{role:"Senior SAP Developer",co:"Industrieunternehmen (Demo)",from:"2016",to:"",text:{de:"Custom-Code-Anpassung für S/4HANA, Fiori-Apps und RAP-Services.",en:"Custom code adaptation for S/4HANA, Fiori apps and RAP services."}}],
+  edu:{de:"B.Sc. Wirtschaftsinformatik",en:"B.Sc. Business Informatics"},certs:["SAP Certified Development Associate – ABAP Cloud"],langs:[["Deutsch","B2"],["Englisch","C1"],["Arabisch","Muttersprache"]],note:"Aktuell im Einsatz, frei ab Jahresmitte."},
+ {id:6,name:"Hana Ibrahim",title:"Data Engineer",sen:"mid",loc:"Remote",avail:plus(7),rate:45,status:"sub",consent:false,
+  sum:{de:"Data Engineer mit Python, SQL und Kafka. Baut Datenpipelines und Auswertungen auf PostgreSQL und Cloud-Data-Warehouses.",en:"Data engineer with Python, SQL and Kafka. Builds data pipelines and reporting on PostgreSQL and cloud data warehouses."},
+  skills:[["Python",5,6],["SQL",5,7],["Kafka",4,3],["PostgreSQL",4,6],["AWS",3,3],["Airflow",4,3],["Snowflake",3,2]],
+  exp:[{role:"Data Engineer",co:"Logistik-Plattform (Demo)",from:"2020",to:"",text:{de:"Echtzeit-Datenpipelines mit Kafka, Reporting für Disposition.",en:"Real-time data pipelines with Kafka, reporting for dispatch."}}],
+  edu:{de:"M.Sc. Data Science",en:"M.Sc. Data Science"},certs:[],langs:[["Deutsch","A2"],["Englisch","C1"],["Arabisch","Muttersprache"]],note:"Einwilligung noch einholen.",log:[{r:"eg",a:"aCreate",d:"2026-10-30"},{r:"eg",a:"aSubmit",d:"2026-11-02"}]},
+ {id:7,name:"Mahmoud Ali",title:"Python Backend Developer",sen:"jun",loc:"Remote",avail:plus(10),rate:30,status:"p1",consent:false,reviewNote:"Bitte Berufserfahrung und englisches Kurzprofil ergänzen.",
+  sum:{de:"Junior-Entwickler mit Python und Django.",en:""},skills:[["Python",3,2],["Django",3,2]],exp:[],edu:{de:"B.Sc. Informatik",en:"B.Sc. Computer Science"},certs:[],langs:[["Englisch","B2"],["Arabisch","Muttersprache"]],note:"",
+  log:[{r:"eg",a:"aCreate",d:"2026-10-28"},{r:"eg",a:"aSubmit",d:"2026-10-31"},{r:"at",a:"aReturn",d:"2026-11-02"}]}
+];
+const clients=[{id:1,name:"Alpenbank Digital (Demo)",contact:"Frau Berger"},{id:2,name:"Logistik Nord GmbH (Demo)",contact:"Herr Wagner"},{id:3,name:"Industrie AG (Demo)",contact:"Frau Novak"}];
+const reqs=[
+ {id:1,client:1,title:"Fullstack Developer Kundenportal",sen:"sen",start:plus(30),status:"open",skills:[["Java",4],["Spring Boot",4],["Angular",3],["AWS",3]],assigned:[1]},
+ {id:2,client:2,title:"DevOps Engineer Plattform",sen:"sen",start:plus(45),status:"prop",skills:[["Kubernetes",4],["Terraform",4],["AWS",4],["CI/CD",3]],assigned:[2]},
+ {id:3,client:3,title:"SAP Fiori Entwickler",sen:"mid",start:plus(60),status:"open",skills:[["SAP Fiori",4],["ABAP",4],["RAP",3]],assigned:[]}
+];
+
+/* ============ State ============ */
+const S={role:"at",pool:"p2",view:"devs",dev:null,edit:false,req:1,q:"",fSen:"",fAv:"",fSk:[],sheet:null,sheetMode:"short",sheetLang:"de",anon:true,showRate:false,impState:"idle"};
+try{const s=JSON.parse(localStorage.getItem("mt_demo2")||"null");if(s&&s.devs){devs.splice(0,devs.length,...s.devs);reqs.splice(0,reqs.length,...s.reqs);}}catch(e){}
+function persist(){try{localStorage.setItem("mt_demo2",JSON.stringify({devs,reqs}))}catch(e){}}
+
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const initials=n=>n.split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase();
+const col=id=>COLORS[id%COLORS.length];
+const senL=s=>t(s);
+const fmtDate=d=>{const dt=new Date(d);return dt.toLocaleDateString(ui==="de"?"de-AT":"en-GB")};
+const days=d=>Math.round((new Date(d)-today)/864e5);
+const availTxt=d=>days(d)<=0?t("availNow"):fmtDate(d);
+const avBadge=d=>days(d)<=0?`<span class="tag g">${t("availNow")}</span>`:`<span class="tag a">${fmtDate(d)}</span>`;
+const stBadge=d=>(d.status==="p1"?`<span class="tag a">${t("inEntry")}</span>`:d.status==="sub"?`<span class="tag">${t("subm")}</span>`:`<span class="tag g">${t("approved")}</span>`)+(d.placed?` <span class="tag x">${t("inUse")}</span>`:"");
+const canEdit=d=>S.role==="at"||d.status==="p1";
+const checklist=d=>[["cName",!!(d.name&&d.title)],["cSkills",d.skills.filter(s=>s[0]).length>=3],["cExp",d.exp.length>=1],["cSumDe",!!(d.sum.de||"").trim()],["cSumEn",!!(d.sum.en||"").trim()],["cLang",d.langs.length>=1],["cCons",!!d.consent]];
+const complete=d=>checklist(d).every(x=>x[1]);
+const logAdd=(d,a)=>{(d.log=d.log||[]).push({r:S.role,a,d:iso(today)})};
+const dots=l=>`<div class="dots">${[1,2,3,4,5].map(i=>`<i class="${i<=l?"f":""}"></i>`).join("")}</div>`;
+const ico={
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .6 3.4 2.3 3.8 5.2"/>',
+ brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+ up:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+ build:'<path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M8 8h2M8 12h2M8 16h2M3 21h18"/>',
+ print:'<path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>'};
+const I=n=>`<svg viewBox="0 0 24 24">${ico[n]}</svg>`;
+function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2200)}
+const allSkills=()=>[...new Set(devs.flatMap(d=>d.skills.map(s=>s[0])))].sort((a,b)=>a.localeCompare(b));
+
+/* ============ Matching ============ */
+function score(d,r){
+  let tot=0,got=0,miss=[],hit=[];
+  r.skills.forEach(([n,min])=>{
+    tot+=min;
+    const s=d.skills.find(x=>x[0].toLowerCase()===n.toLowerCase());
+    if(!s){miss.push(n);return}
+    got+=Math.min(s[1],min); hit.push([n,s[1],min]);
+    if(s[1]<min) miss.push(n+" ("+s[1]+"/"+min+")");
+  });
+  let p=tot?got/tot:0;
+  if(d.sen===r.sen)p=Math.min(1,p+.04);
+  if(days(d.avail)>days(r.start))p*=.85;
+  return {pct:Math.round(p*100),miss,hit};
+}
+
+/* ============ Views ============ */
+function renderNav(){
+  const items=S.role==="at"?[["devs",t("devs"),"users",devs.length],["reqs",t("requests"),"brief",reqs.length],["clients",t("clients"),"build",clients.length],["imp",t("imp"),"up",""]]:[["devs",t("devs"),"users",devs.length],["imp",t("imp"),"up",""]];
+  $("#roleLbl").textContent=t("viewAs");
+  const rb=document.querySelectorAll("#roleSw button");rb[0].textContent=t("roleEg");rb[1].textContent=t("roleAt");rb[0].classList.toggle("on",S.role==="eg");rb[1].classList.toggle("on",S.role==="at");
+  $("#nav").innerHTML=items.map(([k,l,i,c])=>`<button class="nv ${S.view===k?"on":""}" data-act="view" data-v="${k}">${I(i)}${l}${c!==""?`<span class="ct">${c}</span>`:""}</button>`).join("");
+  $("#ui-de").classList.toggle("on",ui==="de");$("#ui-en").classList.toggle("on",ui==="en");
+  $("#demoNote").textContent=t("demo");
+  document.documentElement.lang=ui;
+}
+function filtered(){
+  const q=S.q.toLowerCase();
+  return devs.filter(d=>{
+    if(S.pool==="p2"?d.status!=="p2":d.status==="p2")return false;
+    if(q&&!(d.name+" "+d.title+" "+d.skills.map(s=>s[0]).join(" ")).toLowerCase().includes(q))return false;
+    if(S.fSen&&d.sen!==S.fSen)return false;
+    if(S.fAv==="now"&&days(d.avail)>0)return false;
+    if(S.fAv==="30"&&days(d.avail)>30)return false;
+    if(S.fSk.length&&!S.fSk.every(k=>d.skills.some(s=>s[0]===k)))return false;
+    return true;
+  });
+}
+function vDevs(){
+  const list=filtered();
+  const open=reqs.filter(r=>r.status==="open"||r.status==="prop").length;
+  const n1=devs.filter(d=>d.status!=="p2").length, n2=devs.filter(d=>d.status==="p2").length, nr=devs.filter(d=>d.status==="sub").length;
+  return `<div class="top"><div><h1>${t("dashT")}</h1><p class="sub">${t("dashS")}</p></div><button class="btn p" data-act="newdev">${I("plus")}${t("newDev")}</button></div>
+  <div class="stats">
+   <div class="card stat"><b>${n2}</b><span>${t("pool2")}</span></div>
+   <div class="card stat"><b>${devs.filter(d=>days(d.avail)<=0&&d.status==="p2").length}</b><span>${t("avail")}</span></div>
+   <div class="card stat"><b>${nr}</b><span>${t("toReview")}</span></div>
+   ${S.role==="at"?`<div class="card stat"><b>${open}</b><span>${t("reqOpen")}</span></div>`:`<div class="card stat"><b>${devs.filter(d=>d.status==="p1").length}</b><span>${t("inEntry")}</span></div>`}
+  </div>
+  <div class="tabs"><button class="tab ${S.pool==="p1"?"on":""}" data-act="pool" data-v="p1">${t("pool1")}<span class="n">${n1}</span></button><button class="tab ${S.pool==="p2"?"on":""}" data-act="pool" data-v="p2">${t("pool2")}<span class="n">${n2}</span></button></div>
+  <div class="card">
+   <div class="filters">
+    <input type="search" id="q" placeholder="${t("search")}" value="${esc(S.q)}">
+    <select data-act="fsen"><option value="">${t("allSen")}</option>${["jun","mid","sen","lead"].map(s=>`<option value="${s}" ${S.fSen===s?"selected":""}>${t(s)}</option>`).join("")}</select>
+    <select data-act="fav"><option value="">${t("allAv")}</option><option value="now" ${S.fAv==="now"?"selected":""}>${t("availNow")}</option><option value="30" ${S.fAv==="30"?"selected":""}>${t("avail30")}</option></select>
+    <div></div>
+   </div>
+   <label class="f">${t("skillFilter")}</label>
+   <div class="chips">${allSkills().map(s=>`<button class="chip ${S.fSk.includes(s)?"on":""}" data-act="fsk" data-v="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+  </div>
+  ${list.length?`<div class="devs">${list.map(d=>`<div class="dc" data-act="open" data-v="${d.id}">
+    <div class="row" style="flex-wrap:nowrap"><div class="av" style="background:${col(d.id)}">${initials(d.name)}</div>
+    <div style="min-width:0"><h3>${esc(d.name)}</h3><small>${esc(d.title)}</small></div></div>
+    <div class="row" style="gap:6px">${stBadge(d)}<span class="tag x">${senL(d.sen)}</span>${avBadge(d.avail)}${d.consent?"":`<span class="tag a">${t("noConsent")}</span>`}</div>
+    <div class="mini">${d.skills.slice(0,5).map(s=>`<span class="chip">${esc(s[0])}</span>`).join("")}${d.skills.length>5?`<span class="chip">+${d.skills.length-5}</span>`:""}</div>
+  </div>`).join("")}</div>`:`<div class="empty">${t("noRes")}</div>`}`;
+}
+function vDetail(){
+  const d=devs.find(x=>x.id===S.dev); if(!d){S.view="devs";return vDevs()}
+  if(S.edit) return vEdit(d);
+  return `<button class="back" data-act="view" data-v="devs">← ${t("back")}</button>
+  <div class="top"><div class="hd"><div class="av" style="background:${col(d.id)}">${initials(d.name)}</div><div><h1>${esc(d.name)}</h1><p class="sub">${esc(d.title)}</p><div class="row" style="gap:6px;margin-top:6px">${stBadge(d)}<span class="tag x">${senL(d.sen)}</span>${avBadge(d.avail)}</div></div></div>
+  <div class="row">${actionsHTML(d)}</div></div>
+  ${phaseHTML(d)}${d.reviewNote&&d.status==="p1"?`<div class="retn"><b>${t("retNote")}:</b> ${esc(d.reviewNote)}</div>`:""}
+  <div class="dgrid"><div class="card">
+    <div class="sec" style="margin-top:0"><h4>${t("summary")}</h4><p>${esc(d.sum[ui]||d.sum.de)}</p></div>
+    <div class="sec"><h4>${t("skills")}</h4>${d.skills.slice().sort((a,b)=>b[1]-a[1]).map(s=>`<div class="sk"><span>${esc(s[0])}</span>${dots(s[1])}<small style="color:var(--muted)">${s[2]} ${t("yrs")}</small></div>`).join("")}</div>
+    <div class="sec"><h4>${t("exp")}</h4>${d.exp.map(e=>`<div class="exp"><b>${esc(e.role)}</b><div class="m">${esc(e.co)} · ${esc(e.from)} – ${esc(e.to||t("now"))}</div><p style="margin-top:4px">${esc(e.text[ui]||e.text.de)}</p></div>`).join("")}</div>
+  </div>
+  <div style="display:grid;gap:16px">${sideCards(d)}
+   <div class="card"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">${t("facts")}</h4>
+    <dl class="kv"><dt>${t("loc")}</dt><dd>${esc(d.loc)}</dd><dt>${t("availFrom")}</dt><dd>${availTxt(d.avail)}</dd><dt>${t("rate")}</dt><dd>${d.rate} €</dd><dt>${t("edu")}</dt><dd>${esc(d.edu[ui]||d.edu.de)}</dd></dl></div>
+   <div class="card"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">${t("langs")}</h4>${d.langs.map(l=>`<div class="row" style="justify-content:space-between;padding:3px 0"><span>${esc(l[0])}</span><span class="tag">${esc(l[1])}</span></div>`).join("")}
+    <h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px">${t("certs")}</h4>${d.certs.length?d.certs.map(c=>`<div style="padding:3px 0">${esc(c)}</div>`).join(""):"–"}</div>
+   <div class="card"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">${t("internal")}</h4><p class="sub" style="font-size:12.5px;margin-bottom:6px">${t("internalH")}</p><p>${esc(d.note)||"–"}</p>
+    <div style="margin-top:10px">${d.consent?`<span class="tag g">${t("consent")}</span>`:`<span class="tag a">${t("noConsent")}</span>`}</div></div>
+  </div></div>`;
+}
+function phaseHTML(d){
+  const c1=d.status==="p1"?"cur":"done", c2=d.status==="p1"?"":d.status==="sub"?"cur":"done", c3=d.status==="p2"?"done":"";
+  return `<div class="phase"><div class="${c1}">① ${t("phase1")}</div><div class="${c2}">② ${t("phase2")}</div><div class="${c3}">✓ ${t("phase3")}</div></div>`;
+}
+function actionsHTML(d){
+  const b=[];
+  if(canEdit(d))b.push(`<button class="btn" data-act="edit">${t("edit")}</button>`);
+  if(d.status==="p1")b.push(`<button class="btn p" data-act="submit">${t("submit")}</button>`);
+  if(d.status==="sub"&&S.role==="at")b.push(`<button class="btn" data-act="retur">${t("retBack")}</button><button class="btn p" data-act="approve">${t("approve")}</button>`);
+  if(d.status==="p2"&&S.role==="at")b.push(`<button class="btn" data-act="demote">${t("demote")}</button><button class="btn p" data-act="sheet">${I("print")}${t("clientProfile")}</button>`);
+  return b.join("");
+}
+function sideCards(d){
+  const ck=checklist(d), lg=(d.log||[]).slice().reverse();
+  let h="";
+  if(d.status==="sub"&&S.role==="eg")h+=`<div class="lock">${t("locked")}</div>`;
+  if(d.status!=="p2")h+=`<div class="card"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">${t("checklist")}</h4><div class="chk">${ck.map(([k,ok])=>`<div class="${ok?"ok":""}"><i>${ok?"✓":""}</i>${t(k)}</div>`).join("")}</div><p class="sub" style="font-size:12.5px;margin-top:10px">${t("notReady")}</p></div>`;
+  if(lg.length)h+=`<div class="card"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">${t("history")}</h4>${lg.map(x=>`<div style="padding:4px 0;font-size:13.5px"><b>${t(x.r==="eg"?"rEg":"rAt")}</b> · ${t(x.a)} <span class="sub">· ${fmtDate(x.d)}</span></div>`).join("")}</div>`;
+  return h;
+}
+function vEdit(d){
+  const l=ui;
+  return `<button class="back" data-act="cancel">← ${t("back")}</button>
+  <div class="top"><div><h1>${t("edit")}: ${esc(d.name||"…")}</h1></div><div class="row"><button class="btn d" data-act="delete">${t("del")}</button><button class="btn" data-act="cancel">${t("cancel")}</button><button class="btn p" data-act="save">${t("save")}</button></div></div>
+  <div class="card">
+   <div class="grid2"><div><label class="f">${t("name")}</label><input type="text" data-f="name" value="${esc(d.name)}"></div><div><label class="f">${t("title")}</label><input type="text" data-f="title" value="${esc(d.title)}"></div></div>
+   <div class="grid3" style="margin-top:12px">
+     <div><label class="f">${t("seniority")}</label><select data-f="sen">${["jun","mid","sen","lead"].map(s=>`<option value="${s}" ${d.sen===s?"selected":""}>${t(s)}</option>`).join("")}</select></div>
+     <div><label class="f">${t("availFrom")}</label><input type="date" data-f="avail" value="${d.avail}"></div>
+     <div><label class="f">${t("rate")}</label><input type="number" data-f="rate" value="${d.rate}"></div></div>
+   <div class="grid3" style="margin-top:12px">
+     <div><label class="f">${t("loc")}</label><input type="text" data-f="loc" value="${esc(d.loc)}"></div>
+     <div><label class="f">${t("status")}</label><select data-f="placed"><option value="0" ${!d.placed?"selected":""}>${t("stActive")}</option><option value="1" ${d.placed?"selected":""}>${t("inUse")}</option></select></div>
+     <div><label class="f">${t("noteGdpr")}</label><select data-f="consent"><option value="1" ${d.consent?"selected":""}>${t("consent")}</option><option value="0" ${!d.consent?"selected":""}>${t("noConsent")}</option></select></div></div>
+   <div style="margin-top:12px"><label class="f">${t("summary")} (${l.toUpperCase()})</label><textarea data-f="sum">${esc(d.sum[l]||"")}</textarea></div>
+   <div class="grid2" style="margin-top:12px"><div><label class="f">${t("edu")} (${l.toUpperCase()})</label><input type="text" data-f="edu" value="${esc(d.edu[l]||"")}"></div>
+     <div><label class="f">${t("certs")}</label><input type="text" data-f="certs" value="${esc(d.certs.join("; "))}" placeholder="…; …"></div></div>
+   <div style="margin-top:12px"><label class="f">${t("langs")} (Name:Level; …)</label><input type="text" data-f="langs" value="${esc(d.langs.map(x=>x[0]+":"+x[1]).join("; "))}"></div>
+   <div style="margin-top:12px"><label class="f">${t("internal")}</label><input type="text" data-f="note" value="${esc(d.note)}"></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">${t("skills")}</h4>
+   <div class="edit-sk" style="font-size:12px;color:var(--muted);font-weight:600"><span>${t("skillName")}</span><span>${t("level")} 1–5</span><span>${t("years")}</span><span></span></div>
+   ${d.skills.map((s,i)=>`<div class="edit-sk"><input type="text" data-sk="${i}" data-k="0" value="${esc(s[0])}"><select data-sk="${i}" data-k="1">${[1,2,3,4,5].map(n=>`<option ${s[1]===n?"selected":""}>${n}</option>`).join("")}</select><input type="number" data-sk="${i}" data-k="2" value="${s[2]}"><button class="btn sm d" data-act="rmsk" data-v="${i}">×</button></div>`).join("")}
+   <button class="btn sm" data-act="addsk">${I("plus")}${t("addSkill")}</button></div>
+  <div class="card" style="margin-top:16px"><h4 style="font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">${t("exp")}</h4>
+   ${d.exp.map((e,i)=>`<div class="edit-ex"><div class="grid2"><input type="text" data-ex="${i}" data-k="role" placeholder="${t("role")}" value="${esc(e.role)}"><input type="text" data-ex="${i}" data-k="co" placeholder="${t("company")}" value="${esc(e.co)}"></div>
+    <div class="grid3"><input type="text" data-ex="${i}" data-k="from" placeholder="${t("from")}" value="${esc(e.from)}"><input type="text" data-ex="${i}" data-k="to" placeholder="${t("to")}" value="${esc(e.to)}"><button class="btn sm d" data-act="rmex" data-v="${i}">${t("del")}</button></div>
+    <textarea data-ex="${i}" data-k="text" placeholder="${t("desc")}">${esc(e.text[l]||"")}</textarea></div>`).join("")}
+   <button class="btn sm" data-act="addex">${I("plus")}${t("addExp")}</button></div>`;
+}
+function vReqs(){
+  const r=reqs.find(x=>x.id===S.req)||reqs[0];
+  const c=clients.find(x=>x.id===r.client);
+  const ranked=devs.filter(d=>d.status==="p2").map(d=>({d,...score(d,r)})).sort((a,b)=>b.pct-a.pct);
+  return `<div class="top"><div><h1>${t("dashReq")}</h1><p class="sub">${t("dashReqS")}</p></div></div>
+  <div class="dgrid" style="grid-template-columns:340px 1fr">
+   <div class="card" style="padding:8px">${reqs.map(x=>{const cc=clients.find(k=>k.id===x.client);return `<div class="match" style="grid-template-columns:1fr;cursor:pointer;padding:12px;border-radius:10px;${x.id===r.id?"background:var(--blue-l)":""}" data-act="pickreq" data-v="${x.id}"><div><b>${esc(x.title)}</b><div class="sub" style="font-size:13px">${esc(cc.name)}</div><div class="row" style="gap:6px;margin-top:6px"><span class="tag ${x.status==="won"?"g":x.status==="open"?"a":""}">${t("rStatus")[x.status]}</span><span class="tag x">${t(x.sen)}</span></div></div></div>`}).join("")}</div>
+   <div class="card">
+    <div class="row" style="justify-content:space-between"><div><h3 style="font-size:19px">${esc(r.title)}</h3><p class="sub">${esc(c.name)} · ${t("start")} ${fmtDate(r.start)}</p></div>
+     <select data-act="rstatus" style="width:auto">${Object.entries(t("rStatus")).map(([k,v])=>`<option value="${k}" ${r.status===k?"selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="sec" style="margin-top:14px"><h4>${t("reqSkills")}</h4><div class="chips">${r.skills.map(s=>`<span class="chip">${esc(s[0])} · ${t("minLvl")} ${s[1]}</span>`).join("")}</div></div>
+    <div class="sec"><h4>${t("matching")}</h4><p class="sub" style="font-size:12.5px;margin:-4px 0 6px">${t("onlyApproved")}</p>
+    ${ranked.map(({d,pct,miss})=>{const as=r.assigned.includes(d.id);return `<div class="match">
+      <div class="av" style="background:${col(d.id)};width:44px;height:44px;font-size:15px">${initials(d.name)}</div>
+      <div><b style="cursor:pointer" data-act="open" data-v="${d.id}">${esc(d.name)}</b> <span class="sub">· ${esc(d.title)}</span><div class="row" style="gap:6px;margin-top:4px">${avBadge(d.avail)}${miss.length?`<span class="miss">${t("missing")}: ${esc(miss.join(", "))}</span>`:""}</div></div>
+      <div><div class="pct" style="color:${pct>=80?"var(--green)":pct>=50?"var(--blue)":"var(--muted)"}">${pct}%</div><div class="bar ${pct>=80?"g":""}"><i style="width:${pct}%"></i></div></div>
+      <button class="btn sm ${as?"":"p"}" data-act="assign" data-v="${d.id}">${as?t("assigned")+" ✓":t("assign")}</button></div>`}).join("")}
+    </div></div></div>`;
+}
+function vClients(){
+  return `<div class="top"><div><h1>${t("clients2")}</h1><p class="sub">${t("clientsS")}</p></div></div>
+  <div class="card"><table><thead><tr><th>${t("company")}</th><th>${t("contact")}</th><th>${t("openReq")}</th></tr></thead><tbody>
+  ${clients.map(c=>{const rs=reqs.filter(r=>r.client===c.id);return `<tr class="click" data-act="gotoreq" data-v="${rs[0]?.id||1}"><td><b>${esc(c.name)}</b></td><td>${esc(c.contact)}</td><td>${rs.map(r=>`<span class="tag">${esc(r.title)}</span>`).join(" ")||"–"}</td></tr>`}).join("")}</tbody></table></div>`;
+}
+function vImp(){
+  const body=S.impState==="busy"?`<div class="drop" style="border-style:solid"><p><b>${t("analyzing")}</b></p><div class="prog"><i></i></div></div>`
+  :`<label class="drop" id="drop"><svg viewBox="0 0 24 24">${ico.up}</svg><p><b>${t("drop")}</b></p><p class="sub">${t("dropS")}</p><input type="file" id="cv" accept=".pdf,.doc,.docx" hidden></label>`;
+  return `<div class="top"><div><h1>${t("impT")}</h1><p class="sub">${t("impS")}</p></div></div>
+  <div style="max-width:720px;display:grid;gap:14px">${body}<div class="note">${t("impNote")}</div></div>`;
+}
+function render(){
+  if(S.role==="eg"&&(S.view==="reqs"||S.view==="clients"))S.view="devs";
+  renderNav();
+  $("#main").innerHTML=S.view==="devs"?vDevs():S.view==="detail"?vDetail():S.view==="reqs"?vReqs():S.view==="clients"?vClients():vImp();
+}
+
+/* ============ Client sheet ============ */
+function sheetHTML(d){
+  const L=S.sheetLang, short=S.sheetMode==="short";
+  const lab={de:{prof:"Entwicklerprofil",sk:"Skills",ex:"Berufserfahrung",ed:"Ausbildung & Zertifikate",lg:"Sprachen",lv:"Level",av:"Verfügbar ab",rt:"Stundensatz",lc:"Standort",ref:"Kennung",now:"heute",y:"J.",sum:"Kurzprofil",conf:"Vertraulich · Meridian Talent · Wien"},
+             en:{prof:"Developer profile",sk:"Skills",ex:"Experience",ed:"Education & certifications",lg:"Languages",lv:"Level",av:"Available from",rt:"Hourly rate",lc:"Location",ref:"Ref.",now:"present",y:"yrs",sum:"Summary",conf:"Confidential · Meridian Talent · Vienna"}}[L];
+  const sen={de:{jun:"Junior",mid:"Mid-Level",sen:"Senior",lead:"Lead"},en:{jun:"Junior",mid:"Mid-level",sen:"Senior",lead:"Lead"}}[L];
+  const name=S.anon?`${L==="de"?"Entwickler":"Developer"} #${String(d.id).padStart(3,"0")}`:d.name;
+  const ini=S.anon?"#"+String(d.id).padStart(3,"0"):initials(d.name);
+  const skills=d.skills.slice().sort((a,b)=>b[1]-a[1]).slice(0,short?8:99);
+  const exps=short?d.exp.slice(0,2):d.exp;
+  const av=days(d.avail)<=0?(L==="de"?"sofort":"immediately"):new Date(d.avail).toLocaleDateString(L==="de"?"de-AT":"en-GB");
+  return `<div class="sheet ${short?"short":""}">
+   <div class="sh-top"><div class="sh-brand"><i><svg viewBox="0 0 32 32"><path d="M6 22L11 10l5 9 5-9 5 12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></i>Meridian Talent</div><small>${lab.prof} · ${lab.ref} ${String(d.id).padStart(3,"0")}</small></div>
+   <div class="sh-id"><div class="av" style="background:${col(d.id)}">${esc(ini)}</div><div><h2>${esc(name)}</h2><p>${esc(d.title)}</p></div></div>
+   <div class="sh-facts"><div><small>Level</small><b>${sen[d.sen]}</b></div><div><small>${lab.av}</small><b>${av}</b></div><div><small>${lab.lc}</small><b>${esc(d.loc)}</b></div><div><small>${S.showRate?lab.rt:"&nbsp;"}</small><b>${S.showRate?d.rate+" €/"+(L==="de"?"Std.":"h"):"&nbsp;"}</b></div></div>
+   <h5>${lab.sum}</h5><p>${esc(d.sum[L]||d.sum.de)}</p>
+   <h5>${lab.sk}</h5><div class="sh-sk">${skills.map(s=>`<div><span>${esc(s[0])}</span>${dots(s[1])}<span style="color:#6B7488">${s[2]} ${lab.y}</span></div>`).join("")}</div>
+   <h5>${lab.ex}</h5>${exps.map(e=>`<div class="sh-ex"><b>${esc(e.role)}</b> <span>· ${esc(e.co)} · ${esc(e.from)} – ${esc(e.to||lab.now)}</span>${short?"":`<p>${esc(e.text[L]||e.text.de)}</p>`}</div>`).join("")}
+   ${short?"":`<h5>${lab.ed}</h5><p>${esc(d.edu[L]||d.edu.de)}</p>${d.certs.length?`<p>${d.certs.map(esc).join(" · ")}</p>`:""}`}
+   <h5>${lab.lg}</h5><p>${d.langs.map(l=>esc(l[0])+" ("+esc(l[1])+")").join(" · ")}</p>
+   <div class="sh-foot"><span>${lab.conf}</span><span>${new Date(today).toLocaleDateString(L==="de"?"de-AT":"en-GB")}</span></div></div>`;
+}
+function openSheet(){
+  const d=devs.find(x=>x.id===S.dev); if(!d)return;
+  if(d.status!=="p2"){toast(t("notReady"));return}
+  const ov=$("#ov");
+  ov.innerHTML=`<div class="tb">
+    <div class="seg"><button data-act="smode" data-v="short" class="${S.sheetMode==="short"?"on":""}">${t("sheetShort")}</button><button data-act="smode" data-v="long" class="${S.sheetMode==="long"?"on":""}">${t("sheetLong")}</button></div>
+    <div class="seg"><button data-act="slang" data-v="de" class="${S.sheetLang==="de"?"on":""}">DE</button><button data-act="slang" data-v="en" class="${S.sheetLang==="en"?"on":""}">EN</button></div>
+    <label><input type="checkbox" data-act="sanon" ${S.anon?"checked":""}> ${t("anon")}</label>
+    <label><input type="checkbox" data-act="srate" ${S.showRate?"checked":""}> ${t("showRate")}</label>
+    <span class="sp"></span><span class="sub" style="font-size:12px">${t("pdfHint")}</span>
+    <button class="btn p" data-act="doprint">${I("print")}${t("print")}</button><button class="btn" data-act="closesheet">${t("close")}</button></div>${sheetHTML(d)}`;
+  ov.classList.add("on");
+}
+
+/* ============ Events ============ */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]"); if(!el||el.tagName==="SELECT"||el.type==="checkbox")return;
+  const a=el.dataset.act,v=el.dataset.v;
+  if(a==="ui"){ui=v;S.sheetLang=v;render();if($("#ov").classList.contains("on"))openSheet()}
+  else if(a==="role"){S.role=v;S.pool=v==="eg"?"p1":"p2";S.view="devs";S.edit=false;$("#ov").classList.remove("on");render()}
+  else if(a==="pool"){S.pool=v;render()}
+  else if(a==="submit"){const d=devs.find(x=>x.id===S.dev);if(!complete(d)){toast(t("needComplete"));return}d.status="sub";d.reviewNote="";logAdd(d,"aSubmit");persist();render();toast(t("saved"))}
+  else if(a==="approve"){const d=devs.find(x=>x.id===S.dev);if(!complete(d)){toast(t("needComplete"));return}d.status="p2";logAdd(d,"aApprove");S.pool="p2";persist();render();toast(t("approved"))}
+  else if(a==="retur"){const d=devs.find(x=>x.id===S.dev);const n=prompt(t("retPrompt"),"");if(n===null)return;d.status="p1";d.reviewNote=n;logAdd(d,"aReturn");S.pool="p1";persist();render()}
+  else if(a==="demote"){const d=devs.find(x=>x.id===S.dev);d.status="p1";logAdd(d,"aDemote");reqs.forEach(r=>r.assigned=r.assigned.filter(x=>x!==d.id));S.pool="p1";persist();render()}
+  else if(a==="view"){S.view=v;S.edit=false;render();window.scrollTo(0,0)}
+  else if(a==="open"){S.dev=+v;S.view="detail";S.edit=false;if(S.role==="eg"&&false)S.pool="p1";render();window.scrollTo(0,0)}
+  else if(a==="fsk"){S.fSk=S.fSk.includes(v)?S.fSk.filter(x=>x!==v):[...S.fSk,v];render()}
+  else if(a==="edit"){S.edit=true;render()}
+  else if(a==="cancel"){const d=devs.find(x=>x.id===S.dev);if(d&&d._new){devs.splice(devs.indexOf(d),1);S.view="devs"}S.edit=false;render()}
+  else if(a==="save"){const d=devs.find(x=>x.id===S.dev);delete d._new;if(!d.name.trim())d.name="–";S.edit=false;persist();render();toast(t("saved"))}
+  else if(a==="delete"){if(confirm(t("confirmDel"))){const i=devs.findIndex(x=>x.id===S.dev);devs.splice(i,1);reqs.forEach(r=>r.assigned=r.assigned.filter(x=>x!==S.dev));S.view="devs";S.edit=false;persist();render();toast(t("deleted"))}}
+  else if(a==="newdev"){const d={id:++uid,name:"",title:"",sen:"mid",loc:"Remote",avail:plus(0),rate:40,status:"p1",consent:false,sum:{de:"",en:""},skills:[],exp:[],edu:{de:"",en:""},certs:[],langs:[],note:"",_new:true,log:[{r:S.role,a:"aCreate",d:iso(today)}]};devs.push(d);S.dev=d.id;S.view="detail";S.edit=true;render()}
+  else if(a==="addsk"){devs.find(x=>x.id===S.dev).skills.push(["",3,1]);render()}
+  else if(a==="rmsk"){devs.find(x=>x.id===S.dev).skills.splice(+v,1);render()}
+  else if(a==="addex"){devs.find(x=>x.id===S.dev).exp.push({role:"",co:"",from:"",to:"",text:{de:"",en:""}});render()}
+  else if(a==="rmex"){devs.find(x=>x.id===S.dev).exp.splice(+v,1);render()}
+  else if(a==="sheet"){openSheet()}
+  else if(a==="closesheet"){$("#ov").classList.remove("on")}
+  else if(a==="doprint"){window.print()}
+  else if(a==="smode"){S.sheetMode=v;openSheet()}
+  else if(a==="slang"){S.sheetLang=v;openSheet()}
+  else if(a==="pickreq"){S.req=+v;render()}
+  else if(a==="gotoreq"){S.req=+v;S.view="reqs";render()}
+  else if(a==="assign"){const r=reqs.find(x=>x.id===S.req);const i=r.assigned.indexOf(+v);if(i>=0)r.assigned.splice(i,1);else{r.assigned.push(+v);if(r.status==="open")r.status="prop"}persist();render()}
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.act==="fsen"){S.fSen=el.value;render()}
+  else if(el.dataset.act==="fav"){S.fAv=el.value;render()}
+  else if(el.dataset.act==="rstatus"){reqs.find(x=>x.id===S.req).status=el.value;persist();render()}
+  else if(el.dataset.act==="sanon"){S.anon=el.checked;openSheet()}
+  else if(el.dataset.act==="srate"){S.showRate=el.checked;openSheet()}
+  else if(el.id==="cv"&&el.files[0]){startImport()}
+  else if(el.dataset.f||el.dataset.sk!==undefined||el.dataset.ex!==undefined){applyEdit(el)}
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="q"){S.q=el.value;const pos=el.selectionStart;render();const q=$("#q");q.focus();q.setSelectionRange(pos,pos)}
+  else if(el.dataset.f||el.dataset.sk!==undefined||el.dataset.ex!==undefined){applyEdit(el)}
+});
+function applyEdit(el){
+  const d=devs.find(x=>x.id===S.dev); if(!d)return;
+  if(el.dataset.f){
+    const f=el.dataset.f,v=el.value;
+    if(f==="sum")d.sum[ui]=v; else if(f==="edu")d.edu[ui]=v;
+    else if(f==="certs")d.certs=v.split(";").map(x=>x.trim()).filter(Boolean);
+    else if(f==="langs")d.langs=v.split(";").map(x=>x.trim().split(":")).filter(x=>x[0]).map(x=>[x[0].trim(),(x[1]||"").trim()]);
+    else if(f==="placed")d.placed=v==="1"; else if(f==="rate")d.rate=+v||0; else if(f==="consent")d.consent=v==="1";
+    else d[f]=v;
+  } else if(el.dataset.sk!==undefined){
+    const s=d.skills[+el.dataset.sk],k=+el.dataset.k; s[k]=k===0?el.value:(+el.value||0);
+  } else {
+    const x=d.exp[+el.dataset.ex],k=el.dataset.k; if(k==="text")x.text[ui]=el.value; else x[k]=el.value;
+  }
+}
+/* drag & drop */
+document.addEventListener("dragover",e=>{const z=e.target.closest("#drop");if(z){e.preventDefault();z.classList.add("over")}});
+document.addEventListener("dragleave",e=>{const z=e.target.closest("#drop");if(z)z.classList.remove("over")});
+document.addEventListener("drop",e=>{const z=e.target.closest("#drop");if(z){e.preventDefault();if(e.dataTransfer.files[0])startImport()}});
+function startImport(){
+  S.impState="busy";render();
+  setTimeout(()=>{
+    const d={id:++uid,name:"Mostafa Khaled",title:"Java Backend Developer",sen:"mid",loc:"Remote",avail:plus(30),rate:42,status:"p1",consent:false,log:[{r:S.role,a:"aCreate",d:iso(today)}],
+      sum:{de:"Vorausgefüllt aus dem Lebenslauf (simuliert). Bitte prüfen und ergänzen.",en:"Pre-filled from the CV (simulated). Please review and complete."},
+      skills:[["Java",4,5],["Spring Boot",4,4],["MySQL",3,4],["Docker",3,2]],
+      exp:[{role:"Java Developer",co:"Beispiel-Firma",from:"2021",to:"",text:{de:"Entwicklung von REST-Services (simuliert).",en:"Development of REST services (simulated)."}}],
+      edu:{de:"B.Sc. Informatik",en:"B.Sc. Computer Science"},certs:[],langs:[["Deutsch","B1"],["Englisch","B2"],["Arabisch","Muttersprache"]],note:""};
+    devs.push(d);S.impState="idle";S.dev=d.id;S.view="detail";S.edit=true;persist();render();toast(t("imported"));
+  },1900);
+}
+render();
+</script>
+</body>
+</html>
