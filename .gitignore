@@ -17,3 +17,4 @@ blob-report/
 *.tsbuildinfo
 backups/
 .vscode/
+.deploy.lock

@@ -122,3 +122,55 @@ Durchgeführt am 2026-11-03 gegen die Produktions-Images hinter Caddy (lokal, 8 
 | Langprofil-PDF (Queue, 2 parallel)                 | 20 / 8                  | ≈ 11 PDF/s    | 690 ms | 835 ms | 0      |
 
 Speicher der API danach: ≈ 180 MB (Limit 1,5 GB). Das globale Rate-Limit (600 Anfragen/min pro IP) und das PDF-Limit (30/min pro Nutzer) begrenzen Lastspitzen bewusst.
+
+## 11. Automatisches Deployment (GitHub Actions → Hetzner)
+
+Ablauf: `git push` eines Tags `vX.Y.Z` → CI (Tests, Images, E2E) → Push nach GHCR → Job `deploy` verbindet sich per SSH und ruft `deploy/deploy.sh vX.Y.Z` auf. Das Skript checkt den Tag aus, erstellt ein Backup, zieht die Images, startet und prüft `/api/health`. Bei einem Fehler rollt es auf den vorherigen Tag zurück (Datenbank-Migrationen werden dabei nicht zurückgedreht).
+
+### Einmalige Einrichtung auf dem Server (als root)
+
+```bash
+adduser --disabled-password --gecos "" deploy
+usermod -aG docker deploy                          # Hinweis: docker-Gruppe ≈ root-Rechte
+install -d -o deploy -g deploy /opt/meridian
+sudo -iu deploy
+# Lesezugriff auf das Repository (GitHub → Settings → Deploy keys, read-only):
+ssh-keygen -t ed25519 -f ~/.ssh/github_repo -N "" && cat ~/.ssh/github_repo.pub
+printf 'Host github.com\n  IdentityFile ~/.ssh/github_repo\n' >> ~/.ssh/config
+git clone git@github.com:<owner>/<repo>.git /opt/meridian
+cd /opt/meridian && cp .env.example deploy/.env && chmod 600 deploy/.env   # ausfüllen (Abschnitt 1)
+# Images aus GHCR: Personal Access Token (classic) nur mit Scope read:packages
+echo "<PAT>" | docker login ghcr.io -u <github-user> --password-stdin
+```
+
+In `deploy/.env`: `IMAGE_REGISTRY=ghcr.io/<owner in Kleinbuchstaben>`. Erst-Start wie in Abschnitt 1 (`up -d`, `run --rm seed`).
+
+### SSH-Schlüssel für GitHub Actions (nur Deploy erlaubt)
+
+Lokal: `ssh-keygen -t ed25519 -f gha_deploy -N "" -C github-actions-deploy`. Auf dem Server in `/home/deploy/.ssh/authorized_keys` **eine** Zeile:
+
+```
+restrict,command="/opt/meridian/deploy/deploy.sh" ssh-ed25519 AAAA… github-actions-deploy
+```
+
+Der Schlüssel kann damit nur das Deploy-Skript ausführen (keine Shell, kein Forwarding). Server-Fingerprint holen: `ssh-keyscan -t ed25519 <server-ip>`.
+
+### GitHub-Konfiguration
+
+Repository → Settings → Environments → `production` (optional „Required reviewers“ für eine manuelle Freigabe):
+
+| Art      | Name                 | Wert                                   |
+| -------- | -------------------- | -------------------------------------- |
+| Secret   | `DEPLOY_HOST`        | IP oder Hostname des Servers           |
+| Secret   | `DEPLOY_USER`        | `deploy`                               |
+| Secret   | `DEPLOY_SSH_KEY`     | Inhalt der privaten Datei `gha_deploy` |
+| Secret   | `DEPLOY_KNOWN_HOSTS` | Ausgabe von `ssh-keyscan`              |
+| Variable | `DEPLOY_DOMAIN`      | z. B. `talent.example.at`              |
+
+### Release ausrollen
+
+```bash
+git tag -a v1.0.1 -m "…" && git push origin v1.0.1
+```
+
+Manuell auf dem Server geht es genauso: `cd /opt/meridian && ./deploy/deploy.sh v1.0.1`.
