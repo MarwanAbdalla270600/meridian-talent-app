@@ -1,0 +1,40 @@
+{
+  "name": "meridian-talent-system",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "docker compose up",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter '@meridian/shared' test && bun run --filter '@meridian/api' test && bun run --filter '@meridian/web' test",
+    "build": "bun run --filter '@meridian/web' build",
+    "db:generate": "bun run --filter '@meridian/api' db:generate",
+    "db:migrate": "bun run --filter '@meridian/api' db:migrate",
+    "db:seed": "bun run --filter '@meridian/api' db:seed",
+    "e2e": "bun run --filter '@meridian/web' e2e",
+    "prepare": "lefthook install || true"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/bun": "1.4.4",
+    "angular-eslint": "22.6.0",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.14.0",
+    "lefthook": "2.2.2",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1"
+  },
+  "trustedDependencies": [
+    "lefthook"
+  ]
+}

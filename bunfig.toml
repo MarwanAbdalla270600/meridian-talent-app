@@ -1,0 +1,7 @@
+[install]
+# Reproducible installs: exact versions only, lockfile is committed.
+exact = true
+saveTextLockfile = true
+
+[test]
+# Tests are executed per workspace (see package scripts).

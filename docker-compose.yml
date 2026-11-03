@@ -1,0 +1,130 @@
+# Development environment: `docker compose up`
+#   Web  http://localhost:4200   API  http://localhost:3000/api   Docs http://localhost:3000/api/docs
+#   Mailpit http://localhost:8025   MinIO console http://localhost:9001
+# All credentials below are development placeholders.
+name: meridian-dev
+
+x-api-env: &api-env
+  NODE_ENV: development
+  LOG_LEVEL: debug
+  BASE_URL: http://localhost:4200
+  DATABASE_URL: postgres://meridian:meridian@postgres:5432/meridian
+  SESSION_SECRET: dev-only-session-secret-change-me-0123456789
+  DATA_ENCRYPTION_KEY: ZGV2LW9ubHkta2V5LTMyLWJ5dGVzLWNoYW5nZS1tZSE=
+  COOKIE_SECURE: 'false'
+  S3_ENDPOINT: http://minio:9000
+  S3_PUBLIC_ENDPOINT: http://localhost:9000
+  S3_BUCKET: meridian-documents
+  S3_ACCESS_KEY_ID: meridian
+  S3_SECRET_ACCESS_KEY: meridian-dev-secret
+  S3_AUTO_CREATE_BUCKET: 'true'
+  SMTP_HOST: mailpit
+  SMTP_PORT: '1025'
+  MAIL_FROM: Meridian Talent <no-reply@meridian-talent.local>
+  API_DOCS_ENABLED: 'true'
+  FEATURE_CV_AI_IMPORT: ${FEATURE_CV_AI_IMPORT:-false}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
+  SEED_ADMIN_EMAIL: admin@meridian.local
+  SEED_ADMIN_PASSWORD: Admin-Demo-2026!
+  SEED_AUSTRIA_EMAIL: austria@meridian.local
+  SEED_AUSTRIA_PASSWORD: Austria-Demo-2026!
+  SEED_EGYPT_EMAIL: egypt@meridian.local
+  SEED_EGYPT_PASSWORD: Egypt-Demo-2026!
+  SEED_DEMO_DATA: 'true'
+
+services:
+  postgres:
+    image: postgres:18.6-trixie
+    environment:
+      POSTGRES_USER: meridian
+      POSTGRES_PASSWORD: meridian
+      POSTGRES_DB: meridian
+    ports: ['127.0.0.1:5432:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./deploy/dev/postgres-init.sql:/docker-entrypoint-initdb.d/01-test-db.sql:ro,z
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U meridian -d meridian']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    # Community build of MinIO (upstream stopped publishing images, see docs/decisions.md).
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: meridian
+      MINIO_ROOT_PASSWORD: meridian-dev-secret
+    ports: ['127.0.0.1:9000:9000', '127.0.0.1:9001:9001']
+    volumes: [miniodata:/data]
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    ports: ['127.0.0.1:8025:8025', '127.0.0.1:1025:1025']
+
+  # One-shot dependency install into named volumes (shared by api and web).
+  deps:
+    build: { context: ., dockerfile: apps/web/Dockerfile, target: base }
+    user: '${UID:-1000}:${GID:-1000}'
+    command: bun install --frozen-lockfile --ignore-scripts
+    working_dir: /app
+    volumes: &src
+      - .:/app:z
+      - node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+      - shared_node_modules:/app/packages/shared/node_modules
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile, target: dev }
+    user: '${UID:-1000}:${GID:-1000}'
+    working_dir: /app/apps/api
+    command: sh -c "bun src/db/migrate.ts && bun src/db/seed.ts && exec bun --watch src/index.ts"
+    environment: *api-env
+    ports: ['127.0.0.1:3000:3000']
+    volumes: *src
+    depends_on:
+      deps: { condition: service_completed_successfully }
+      postgres: { condition: service_healthy }
+      minio: { condition: service_healthy }
+      mailpit: { condition: service_started }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'bun',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile, target: base }
+    user: '${UID:-1000}:${GID:-1000}'
+    working_dir: /app/apps/web
+    command: bunx ng serve --host 0.0.0.0 --port 4200 --proxy-config proxy.docker.json
+    environment:
+      NG_CLI_ANALYTICS: 'false'
+    ports: ['127.0.0.1:4200:4200']
+    volumes: *src
+    depends_on:
+      deps: { condition: service_completed_successfully }
+      api: { condition: service_started }
+
+volumes:
+  pgdata:
+  miniodata:
+  node_modules:
+  api_node_modules:
+  web_node_modules:
+  shared_node_modules:

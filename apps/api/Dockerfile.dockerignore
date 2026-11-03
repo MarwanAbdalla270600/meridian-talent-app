@@ -1,0 +1,12 @@
+**/node_modules
+**/.angular
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+.git
+.env
+.env.*
+deploy
+docs
+apps/web

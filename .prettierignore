@@ -1,0 +1,11 @@
+bun.lock
+node_modules
+dist
+.angular
+coverage
+apps/api/drizzle
+docs/reference
+playwright-report
+test-results
+*.woff2
+.env.example
