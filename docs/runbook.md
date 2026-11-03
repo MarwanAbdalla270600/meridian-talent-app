@@ -110,3 +110,15 @@ Caddy beschafft und erneuert Let's-Encrypt-Zertifikate automatisch (Volume `cadd
 | Aufbewahrungsprüfung sofort                        | Oberfläche → Einstellungen, oder `docker compose … exec api bun run jobs:retention`                           |
 | KI-Import aktivieren                               | `FEATURE_CV_AI_IMPORT=true`, `ANTHROPIC_API_KEY=…` in `deploy/.env`, `up -d api` (vorher DSGVO-Punkte klären) |
 | Logo/Marke ändern                                  | `packages/shared/brand/` anpassen, neue Images bauen                                                          |
+
+## 10. Last-Smoke (Referenzwerte)
+
+Durchgeführt am 2026-11-03 gegen die Produktions-Images hinter Caddy (lokal, 8 vCPU, kleiner Demodatenbestand), unterhalb der Rate-Limits:
+
+| Szenario                                           | Anfragen / Parallelität | Durchsatz     | p50    | p95    | Fehler |
+| -------------------------------------------------- | ----------------------- | ------------- | ------ | ------ | ------ |
+| Entwicklerliste (Suche/Filter/Sortierung gemischt) | 400 / 20                | ≈ 1 100 req/s | 16 ms  | 25 ms  | 0      |
+| Entwicklerdetail                                   | 100 / 10                | ≈ 770 req/s   | 12 ms  | 16 ms  | 0      |
+| Langprofil-PDF (Queue, 2 parallel)                 | 20 / 8                  | ≈ 11 PDF/s    | 690 ms | 835 ms | 0      |
+
+Speicher der API danach: ≈ 180 MB (Limit 1,5 GB). Das globale Rate-Limit (600 Anfragen/min pro IP) und das PDF-Limit (30/min pro Nutzer) begrenzen Lastspitzen bewusst.
